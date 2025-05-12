@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { setCookie } from "@/actions/cookies";
 
 const Checkout = () => {
   const router = useRouter();
@@ -11,33 +12,45 @@ const Checkout = () => {
       headers: {
         accept: "application/json",
         "Content-Type": "application/json",
-        authorization: "Basic " + process.env.AUTHORIZATION,
+        authorization: "Basic " + process.env.NEXT_PUBLIC_PAYMONGO_SECRET_KEY,
       },
       body: JSON.stringify({
         data: {
           attributes: {
-            send_email_receipt: false,
+            billing: {
+              email: "cxnner05@gmail.com",
+              phone: "09281815518",
+              name: "Wendell",
+            },
+            send_email_receipt: true,
             show_description: false,
             show_line_items: true,
+            success_url: "http://localhost:3000/success",
+            cancel_url: "http://localhost:3000",
             line_items: [
               {
                 currency: "PHP",
-                name: "sample_item",
+                amount: 120000,
+                description: "iPhone 16 Pro Max",
+                name: "Talong may gold",
                 quantity: 1,
-                amount: 10000,
-                description: "mamamo",
               },
             ],
-            payment_method_types: ["qrph", "card", "gcash", "grab_pay"],
+            payment_method_types: ["card", "gcash", "paymaya"],
+            statement_descriptor:
+              "You have paid for an item from Wendell Inc. Thank you for shopping!",
           },
         },
       }),
     });
 
-    const data = await res.json();
+    const { data } = await res.json();
     console.log(data);
 
-    router.push(data.data.attributes.checkout_url, {});
+    console.log(data.id);
+    await setCookie("checkout_session_id", data.id);
+
+    router.push(data.attributes.checkout_url);
   };
   return (
     <Card>
